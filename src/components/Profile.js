@@ -1,24 +1,22 @@
 import { useState, useEffect } from 'react';
 import { BsFillCaretLeftFill } from 'react-icons/bs';
 import { useHistory } from 'react-router-dom';
+import defaultAvatar from '../assets/default-avatar.jpg';
 
 const Profile = ({ token }) => {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [age, setAge] = useState('');
+  const [user, setUser] = useState({});
+  const [hasAvatar, setHasAvatar] = useState(false);
 
   const history = useHistory();
 
   useEffect(() => {
     const getUserData = async () => {
-      const { name: userName, email: userEmail, age: userAge } = await fetchUser();
-      setName(userName);
-      setEmail(userEmail);
-      setAge(userAge);
+      const userObj = await fetchUser();
+      setUser(userObj);
     }
 
     getUserData();
-  });
+  }, []);
 
   const fetchUser = async () => {
     const res = await fetch('http://localhost:8000/users/me',{
@@ -27,6 +25,10 @@ const Profile = ({ token }) => {
       }
     });
     const data = await res.json();
+    const res_avatar = await fetch(`http://localhost:8000/users/${data._id}/avatar`);
+    if (res_avatar.status === 200) {
+      setHasAvatar(true);
+    }
 
     return data
   }
@@ -40,9 +42,13 @@ const Profile = ({ token }) => {
 	/>
 	<h1 style={{ flush: 'left' }}>Profile</h1>
       </header>
-      <p>Name: {name}</p>
-      <p>Email: {email}</p>
-      <p>Age: {age}</p>
+      { hasAvatar ?
+	<img src={`http://localhost:8000/users/${user.id}/avatar`} alt='profile avatar' />
+	: <img src={defaultAvatar} alt='profile avatar' />
+      }
+      <p>Name: {user.name}</p>
+      <p>Email: {user.email}</p>
+      <p>Age: {user.age}</p>
     </>
   );
 }
